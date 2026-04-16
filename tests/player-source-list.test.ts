@@ -5,6 +5,7 @@ import {
   shouldExpandForCurrentSource,
 } from '@/lib/player/source-list-utils';
 import { shouldReuseCachedResolution } from '@/lib/player/resolution-cache';
+import { extractPlaybackQualityLabel } from '@/lib/utils/video';
 
 test('shouldExpandForCurrentSource detects hidden active sources', () => {
   const sources = [
@@ -52,6 +53,16 @@ test('getSourceResolutionBadge prefers current actual resolution, then probed, t
   assert.deepEqual(remark, { label: '蓝光', color: 'bg-blue-500' });
 });
 
+test('getSourceResolutionBadge does not treat language markers as playback quality', () => {
+  const remark = getSourceResolutionBadge({
+    isCurrent: false,
+    remarks: '国语',
+  });
+  assert.equal(remark, null);
+  assert.equal(extractPlaybackQualityLabel('中字'), null);
+  assert.equal(extractPlaybackQualityLabel('segment.ts'), null);
+});
+
 test('shouldReuseCachedResolution keeps played results across episode changes but re-probes stale probed data', () => {
   assert.equal(shouldReuseCachedResolution({
     width: 1920,
@@ -79,4 +90,11 @@ test('shouldReuseCachedResolution keeps played results across episode changes bu
     origin: 'probed',
     episodeIndex: 2,
   }, 5), false);
+
+  assert.equal(shouldReuseCachedResolution({
+    label: '蓝光',
+    color: 'bg-blue-500',
+    origin: 'hint',
+    episodeIndex: 2,
+  }, 2), false);
 });
